@@ -46,6 +46,9 @@ CubeMesh initCubeMesh()
 
 void drawChunk(Chunk chunk, mat4s vp, GLuint shader, CubeMesh cm)
 {
+	int mvpUniform = glGetUniformLocation(shader, "mvp");
+	int blockColorUniform = glGetUniformLocation(shader, "blockColor");
+
 	glUseProgram(shader);
 
 	for (int x = 0; x < CHUNK_X; x++)
@@ -58,18 +61,15 @@ void drawChunk(Chunk chunk, mat4s vp, GLuint shader, CubeMesh cm)
 				mat4s mvp = glms_mat4_mul(
 					vp, glms_translate(glms_mat4_identity(), pos));
 
-				glUniformMatrix4fv(
-					glGetUniformLocation(shader, "mvp"), 1, false, &mvp.m00);
+				glUniformMatrix4fv(mvpUniform, 1, false, &mvp.m00);
 
 				switch (chunk.blocks[index].blockType)
 				{
 				case BLOCK_TYPE_STONE:
-					glUniform3f(glGetUniformLocation(shader, "blockColor"), 0.5,
-						0.5, 0.5);
+					glUniform3f(blockColorUniform, 0.5, 0.5, 0.5);
 					break;
 				case BLOCK_TYPE_GRASS:
-					glUniform3f(glGetUniformLocation(shader, "blockColor"), 0.2,
-						1.0, 0.4);
+					glUniform3f(blockColorUniform, 0.2, 1.0, 0.4);
 					break;
 				}
 

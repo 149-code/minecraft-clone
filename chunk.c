@@ -2,11 +2,6 @@
 #include "renderer.h"
 #include <cglm/struct.h>
 
-int getBlockIndex(int x, int y, int z)
-{
-	return x * CHUNK_Y * CHUNK_Z + y * CHUNK_Z + z;
-}
-
 bool isTransparent(int blockType)
 {
 	if (blockType == BLOCK_TYPE_AIR)
@@ -79,7 +74,7 @@ Chunk generateRandomChunk(vec3s pos, fnl_state noiseConfig)
 	for (int x = 0; x < CHUNK_X; x++)
 		for (int z = 0; z < CHUNK_Z; z++)
 		{
-			int height = fnlGetNoise2D(&noiseConfig, x, z) * 10;
+			int height = fnlGetNoise2D(&noiseConfig, pos.x + x, pos.z + z) * 10;
 
 			ret.blocks[getBlockIndex(x, height, z)] = (Block){
 				.blockType = BLOCK_TYPE_GRASS,
@@ -87,7 +82,7 @@ Chunk generateRandomChunk(vec3s pos, fnl_state noiseConfig)
 
 			for (int y = 0; y < height; y++)
 			{
-				if (height - y < 2)
+				if (height - y < 1)
 					ret.blocks[getBlockIndex(x, y, z)].blockType = BLOCK_TYPE_GRASS;
 				else
 					ret.blocks[getBlockIndex(x, y, z)].blockType = BLOCK_TYPE_STONE;

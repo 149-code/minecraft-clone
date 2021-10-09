@@ -32,15 +32,19 @@ int main()
 
 	GLuint shader = gltCreateShader("cube/shader.vert", "cube/shader.frag");
 	CubeMesh cm = initCubeMesh();
-	Player player = {{-2, 2, -2}, {glm_rad(45), glm_rad(-30)}};
+	Player player = {{-5, 10, -5}, {glm_rad(45), glm_rad(-30)}};
 
 	fnl_state noiseConfig = fnlCreateState();
 	noiseConfig.noise_type = FNL_NOISE_OPENSIMPLEX2;
 	noiseConfig.frequency = 0.05;
 
-	Chunk chunk = generateRandomChunk((vec3s) {0, 0, 0}, noiseConfig);
-
-	computeVisableFaces(&chunk);
+	Chunk chunks[25];
+	for (int x = 0; x < 5; x++)
+		for (int z = 0; z < 5; z++)
+		{
+			chunks[x * 5 + z] = generateRandomChunk((vec3s) {x * 16, 0, z * 16}, noiseConfig);
+			computeVisableFaces(&chunks[x * 5 + z]);
+		}
 
 	while (!glfwWindowShouldClose(window))
 	{
@@ -56,7 +60,9 @@ int main()
 		mat4s vp = glms_mat4_mul(projection, view);
 
 		glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
-		drawChunk(chunk, vp, shader, cm);
+
+		for (int i = 0; i < 25; i++)
+			drawChunk(chunks[i], vp, shader, cm);
 
 		glfwSwapBuffers(window);
 	}

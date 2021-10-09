@@ -22,6 +22,11 @@ typedef struct
 } Chunk;
 
 void computeVisableFaces(Chunk* c);
-int getBlockIndex(int x, int y, int z);
 bool isTransparent(int blockType);
 Chunk generateRandomChunk(vec3s pos, fnl_state noiseConfig);
+
+static inline int getBlockIndex(int x, int y, int z)
+{
+	return x * CHUNK_Y * CHUNK_Z + y * CHUNK_Z + z;
+}
+
