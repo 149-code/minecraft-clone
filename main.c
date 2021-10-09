@@ -12,8 +12,6 @@
 #include "chunk.h"
 #include "player.h"
 
-// a a a:
-
 Chunk createChunk()
 {
 	Chunk ret = {
