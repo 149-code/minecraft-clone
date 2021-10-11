@@ -6,11 +6,6 @@
 #include "chunk.h"
 #include "blockType.h"
 
-typedef struct CubeMesh
-{
-	GLTvertexStore faces[6];
-} CubeMesh;
-
 enum BlockFaces
 {
 	X_MINUS,
@@ -21,5 +16,5 @@ enum BlockFaces
 	Z_PLUS
 };
 
-CubeMesh initCubeMesh();
-void drawChunk(Chunk chunk, mat4s vp, GLuint shader, CubeMesh cm);
+GLTvertexStore configChunkVertexStore();
+void drawChunk(Chunk chunk, mat4s vp, GLuint shader, GLTvertexStore vs);

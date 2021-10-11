@@ -23,6 +23,17 @@ Chunk createChunk()
 	return ret;
 }
 
+void printMat4(mat4s mat)
+{
+	for (int i = 0; i < 4; i++)
+	{
+		for (int j = 0; j < 4; j++)
+			printf("%f ", mat.col[i].raw[j]);
+
+		puts("");
+	}
+}
+
 int main()
 {
 	GLFWwindow* window = gltCreateDefaultContext(500, 500, "", NULL);
@@ -31,19 +42,22 @@ int main()
 	glDepthFunc(GL_LESS);
 
 	GLuint shader = gltCreateShader("cube/shader.vert", "cube/shader.frag");
-	CubeMesh cm = initCubeMesh();
-	Player player = {{-5, 10, -5}, {glm_rad(45), glm_rad(-30)}};
+	GLTvertexStore chunkVs = configChunkVertexStore();
+	Player player = {{-5, 10, -5}, {glm_rad(-45), glm_rad(-30)}};
 
 	fnl_state noiseConfig = fnlCreateState();
 	noiseConfig.noise_type = FNL_NOISE_OPENSIMPLEX2;
 	noiseConfig.frequency = 0.05;
+	noiseConfig.octaves = 10;
 
 	Chunk chunks[25];
+
 	for (int x = 0; x < 5; x++)
-		for (int z = 0; z < 5; z++)
+		for (int y = 0; y < 5; y++)
 		{
-			chunks[x * 5 + z] = generateRandomChunk((vec3s) {x * 16, 0, z * 16}, noiseConfig);
-			computeVisableFaces(&chunks[x * 5 + z]);
+			chunks[x * 5 + y] = generateRandomChunk((vec3s) {16 * x, 0, 16 * y}, noiseConfig);
+			computeVisableFaces(&chunks[x * 5 + y]);
+			computeFaceTransforms(&chunks[x * 5 + y]);
 		}
 
 	while (!glfwWindowShouldClose(window))
@@ -62,7 +76,7 @@ int main()
 		glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
 		for (int i = 0; i < 25; i++)
-			drawChunk(chunks[i], vp, shader, cm);
+			drawChunk(chunks[i], vp, shader, chunkVs);
 
 		glfwSwapBuffers(window);
 	}

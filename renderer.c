@@ -4,82 +4,48 @@
 #include "cubeMesh.h"
 #include "renderer.h"
 
-CubeMesh initCubeMesh()
+GLTvertexStore configChunkVertexStore()
 {
-	CubeMesh ret;
+	GLTvertexStore ret = gltCreateVertexStore(2);
 
-	ret.faces[X_MINUS] = gltCreateVertexStore(1);
-	gltVertexStoreSetData(
-		ret.faces[X_MINUS], 0, sizeof(cubeXMinus), cubeXMinus, GL_STATIC_DRAW);
+	gltUseVertexStoreBuffer(ret, 0);
 	glVertexAttribPointer(0, 3, GL_FLOAT, false, 0, NULL);
 	glEnableVertexAttribArray(0);
 
-	ret.faces[X_PLUS] = gltCreateVertexStore(1);
-	gltVertexStoreSetData(ret.faces[X_PLUS], 0, sizeof(cubeXPlus), cubeXPlus, GL_STATIC_DRAW);
-	glVertexAttribPointer(0, 3, GL_FLOAT, false, 0, NULL);
-	glEnableVertexAttribArray(0);
+	gltUseVertexStoreBuffer(ret, 1);
+	glVertexAttribPointer(1, 4, GL_FLOAT, false, sizeof(mat4s), (void*) 0);
+	glVertexAttribPointer(2, 4, GL_FLOAT, false, sizeof(mat4s), (void*) (1 * sizeof(vec4s)));
+	glVertexAttribPointer(3, 4, GL_FLOAT, false, sizeof(mat4s), (void*) (2 * sizeof(vec4s)));
+	glVertexAttribPointer(4, 4, GL_FLOAT, false, sizeof(mat4s), (void*) (3 * sizeof(vec4s)));
 
-	ret.faces[Y_MINUS] = gltCreateVertexStore(1);
-	gltVertexStoreSetData(
-		ret.faces[Y_MINUS], 0, sizeof(cubeYMinus), cubeYMinus, GL_STATIC_DRAW);
-	glVertexAttribPointer(0, 3, GL_FLOAT, false, 0, NULL);
-	glEnableVertexAttribArray(0);
-
-	ret.faces[Y_PLUS] = gltCreateVertexStore(1);
-	gltVertexStoreSetData(ret.faces[Y_PLUS], 0, sizeof(cubeYPlus), cubeYPlus, GL_STATIC_DRAW);
-	glVertexAttribPointer(0, 3, GL_FLOAT, false, 0, NULL);
-	glEnableVertexAttribArray(0);
-
-	ret.faces[Z_MINUS] = gltCreateVertexStore(1);
-	gltVertexStoreSetData(
-		ret.faces[Z_MINUS], 0, sizeof(cubeZMinus), cubeZMinus, GL_STATIC_DRAW);
-	glVertexAttribPointer(0, 3, GL_FLOAT, false, 0, NULL);
-	glEnableVertexAttribArray(0);
-
-	ret.faces[Z_PLUS] = gltCreateVertexStore(1);
-	gltVertexStoreSetData(ret.faces[Z_PLUS], 0, sizeof(cubeZPlus), cubeZPlus, GL_STATIC_DRAW);
-	glVertexAttribPointer(0, 3, GL_FLOAT, false, 0, NULL);
-	glEnableVertexAttribArray(0);
+	glEnableVertexAttribArray(1);
+	glVertexAttribDivisor(1, 1);
+	glEnableVertexAttribArray(2);
+	glVertexAttribDivisor(2, 1);
+	glEnableVertexAttribArray(3);
+	glVertexAttribDivisor(3, 1);
+	glEnableVertexAttribArray(4);
+	glVertexAttribDivisor(4, 1);
 
 	return ret;
 }
 
-void drawChunk(Chunk chunk, mat4s vp, GLuint shader, CubeMesh cm)
+void drawChunk(Chunk chunk, mat4s vp, GLuint shader, GLTvertexStore vs)
 {
-	int mvpUniform = glGetUniformLocation(shader, "mvp");
 	int blockColorUniform = glGetUniformLocation(shader, "blockColor");
+ 	int vpUniform = glGetUniformLocation(shader, "vp");
+	glUniformMatrix4fv(vpUniform, 1, false, &vp.m00);
 
+	glUniform3f(blockColorUniform, 1.0, 1.0, 1.0);
 	glUseProgram(shader);
 
-	for (int x = 0; x < CHUNK_X; x++)
-		for (int y = 0; y < CHUNK_Y; y++)
-			for (int z = 0; z < CHUNK_Z; z++)
-			{
-				int index = getBlockIndex(x, y, z);
-				vec3s pos = glms_vec3_add(chunk.pos, (vec3s){x, y, z});
+	for (int i = 0; i < 6; i++)
+	{
+		gltVertexStoreSetData(
+			vs, 0, sizeof(vec3s) * 6, cubeMesh[6 * i], GL_DYNAMIC_DRAW);
+		gltVertexStoreSetData(vs, 1, chunk.faceTransformsLen[i] * sizeof(mat4s),
+			chunk.faceTransforms[i], GL_DYNAMIC_DRAW);
 
-				mat4s mvp = glms_mat4_mul(
-					vp, glms_translate(glms_mat4_identity(), pos));
-
-				glUniformMatrix4fv(mvpUniform, 1, false, &mvp.m00);
-
-				switch (chunk.blocks[index].blockType)
-				{
-				case BLOCK_TYPE_STONE:
-					glUniform3f(blockColorUniform, 0.5, 0.5, 0.5);
-					break;
-				case BLOCK_TYPE_GRASS:
-					glUniform3f(blockColorUniform, 0.2, 1.0, 0.4);
-					break;
-				}
-
-				for (int i = 0; i < 6; i++)
-				{
-					if (chunk.blocks[index].faceBitMask & (1 << i))
-					{
-						gltUseVertexStore(cm.faces[i]);
-						glDrawArrays(GL_TRIANGLES, 0, 6);
-					}
-				}
-			}
+		glDrawArraysInstanced(GL_TRIANGLES, 0, 6, chunk.faceTransformsLen[i]);
+	}
 }
