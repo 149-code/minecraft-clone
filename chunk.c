@@ -1,6 +1,9 @@
+#include <cglm/struct.h>
+
 #include "chunk.h"
 #include "renderer.h"
-#include <cglm/struct.h>
+#include "texture.h"
+#include "perlin.h"
 
 bool isTransparent(int blockType)
 {
@@ -68,7 +71,7 @@ void computeFaceTransforms(Chunk* chunk)
 {
 	int blockIndex = 0;
 	for (int i = 0; i < 6; i++)
-		chunk->faceTransformsLen[i] = 0;
+		chunk->numInstances[i] = 0;
 
 	for (int x = 0; x < CHUNK_X; x++)
 		for (int y = 0; y < CHUNK_Y; y++)
@@ -76,15 +79,20 @@ void computeFaceTransforms(Chunk* chunk)
 			{
 				for (int i = 0; i < 6; i++)
 				{
+
 					if (chunk->blocks[blockIndex].faceBitMask & (1 << i))
 					{
 						chunk->faceTransforms[i]
-								     [chunk->faceTransformsLen[i]] =
+								     [chunk->numInstances[i]] =
 							glms_translate(glms_mat4_identity(),
 								glms_vec3_add((vec3s){x, y, z},
 									chunk->pos));
 
-						chunk->faceTransformsLen[i] += 1;
+						chunk->faceTextureIds[i]
+								     [chunk->numInstances[i]] =
+							findTextureId(chunk->blocks[blockIndex], i);
+
+						chunk->numInstances[i] += 1;
 					}
 				}
 
@@ -92,14 +100,14 @@ void computeFaceTransforms(Chunk* chunk)
 			}
 }
 
-Chunk generateRandomChunk(vec3s pos, fnl_state noiseConfig)
+Chunk generateRandomChunk(vec3s pos)
 {
 	Chunk ret = initChunk(pos);
 
 	for (int x = 0; x < CHUNK_X; x++)
 		for (int z = 0; z < CHUNK_Z; z++)
 		{
-			int height = fnlGetNoise2D(&noiseConfig, pos.x + x, pos.z + z) * 10;
+			int height = Perlin_Get2d(pos.x + x, pos.z + z, 0.1, 2) * 20;
 
 			ret.blocks[getBlockIndex(x, height, z)] = (Block){
 				.blockType = BLOCK_TYPE_GRASS,
@@ -107,9 +115,12 @@ Chunk generateRandomChunk(vec3s pos, fnl_state noiseConfig)
 
 			for (int y = 0; y < height; y++)
 			{
-				if (height - y < 1)
+				if (height == y - 1)
 					ret.blocks[getBlockIndex(x, y, z)].blockType =
 						BLOCK_TYPE_GRASS;
+				else if (height - y < 2)
+					ret.blocks[getBlockIndex(x, y, z)].blockType =
+						BLOCK_TYPE_DIRT;
 				else
 					ret.blocks[getBlockIndex(x, y, z)].blockType =
 						BLOCK_TYPE_STONE;
@@ -127,7 +138,10 @@ Chunk initChunk(vec3s pos)
 	};
 
 	for (int i = 0; i < 6; i++)
+	{
 		ret.faceTransforms[i] = aligned_alloc(64, sizeof(mat4s) * 2048);
+		ret.faceTextureIds[i] = malloc(sizeof(float) * 2048);
+	}
 
 	return ret;
 }

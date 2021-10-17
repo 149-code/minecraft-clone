@@ -17,4 +17,4 @@ enum BlockFaces
 };
 
 GLTvertexStore configChunkVertexStore();
-void drawChunk(Chunk chunk, mat4s vp, GLuint shader, GLTvertexStore vs);
+void drawChunk(Chunk chunk, mat4s vp, GLuint shader, GLuint texture, GLTvertexStore vs);

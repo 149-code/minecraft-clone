@@ -1,7 +1,8 @@
 #define GLT_IMPL
-#define FNL_IMPL
-#include <FastNoiseLite.h>
+#define STB_IMAGE_IMPLEMENTATION
 #include <ct/glt.h>
+#include <stb_image.h>
+
 #include <cglm/struct.h>
 
 #include <stdio.h>
@@ -11,24 +12,16 @@
 #include "renderer.h"
 #include "chunk.h"
 #include "player.h"
-
-Chunk createChunk()
-{
-	Chunk ret = {
-		.pos = (vec3s) {0, 0, 0},
-		.blocks = malloc(sizeof(Block) * CHUNK_X * CHUNK_Y * CHUNK_Z),
-	};
-
-	ret.blocks[0].blockType = BLOCK_TYPE_STONE;
-	return ret;
-}
+#include "texture.h"
 
 void printMat4(mat4s mat)
 {
-	for (int i = 0; i < 4; i++)
+	for (int row = 0; row < 4; row++)
 	{
-		for (int j = 0; j < 4; j++)
-			printf("%f ", mat.col[i].raw[j]);
+		for (int col = 0; col < 4; col++)
+		{
+			printf("%f ", mat.raw[col][row]);
+		}
 
 		puts("");
 	}
@@ -37,6 +30,7 @@ void printMat4(mat4s mat)
 int main()
 {
 	GLFWwindow* window = gltCreateDefaultContext(500, 500, "", NULL);
+
 	glfwSetInputMode(window, GLFW_CURSOR, GLFW_CURSOR_DISABLED);
 	glEnable(GL_DEPTH_TEST);
 	glDepthFunc(GL_LESS);
@@ -44,21 +38,21 @@ int main()
 	GLuint shader = gltCreateShader("cube/shader.vert", "cube/shader.frag");
 	GLTvertexStore chunkVs = configChunkVertexStore();
 	Player player = {{-5, 10, -5}, {glm_rad(-45), glm_rad(-30)}};
+	GLuint texture = generate3DTexture();
 
-	fnl_state noiseConfig = fnlCreateState();
-	noiseConfig.noise_type = FNL_NOISE_OPENSIMPLEX2;
-	noiseConfig.frequency = 0.05;
-	noiseConfig.octaves = 10;
+	Chunk chunks[100];
 
-	Chunk chunks[25];
-
-	for (int x = 0; x < 5; x++)
-		for (int y = 0; y < 5; y++)
+	for (int x = 0; x < 10; x++)
+		for (int y = 0; y < 10; y++)
 		{
-			chunks[x * 5 + y] = generateRandomChunk((vec3s) {16 * x, 0, 16 * y}, noiseConfig);
-			computeVisableFaces(&chunks[x * 5 + y]);
-			computeFaceTransforms(&chunks[x * 5 + y]);
+			chunks[x * 10 + y] = generateRandomChunk((vec3s) {16 * x, 0, 16 * y});
+			computeVisableFaces(&chunks[x * 10 + y]);
+			computeFaceTransforms(&chunks[x * 10 + y]);
 		}
+
+	glEnable(GL_CULL_FACE);
+	glCullFace(GL_BACK);
+	glFrontFace(GL_CW); 
 
 	while (!glfwWindowShouldClose(window))
 	{
@@ -69,14 +63,16 @@ int main()
 
 		updatePlayer(&player, window);
 
-		mat4s projection = glms_perspective(glm_rad(45), 1, 0.1, 100);
+		int width, height;
+		glfwGetWindowSize(window, &width, &height);
+		mat4s projection = glms_perspective(glm_rad(45), (float) width / height, 0.1, 100);
 		mat4s view = createViewMat(player);
 		mat4s vp = glms_mat4_mul(projection, view);
 
 		glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
-		for (int i = 0; i < 25; i++)
-			drawChunk(chunks[i], vp, shader, chunkVs);
+		for (int i = 0; i < 100; i++)
+			drawChunk(chunks[i], vp, shader, texture, chunkVs);
 
 		glfwSwapBuffers(window);
 	}

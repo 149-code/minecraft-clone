@@ -20,13 +20,14 @@ typedef struct
 	vec3s pos;
 	Block* blocks;
 	mat4s* faceTransforms[6];
-	int faceTransformsLen[6];
+	float* faceTextureIds[6];
+	int numInstances[6];
 } Chunk;
 
 void computeVisableFaces(Chunk* c);
 void computeFaceTransforms(Chunk* c);
 bool isTransparent(int blockType);
-Chunk generateRandomChunk(vec3s pos, fnl_state noiseConfig);
+Chunk generateRandomChunk(vec3s pos);
 Chunk initChunk(vec3s pos);
 
 static inline int getBlockIndex(int x, int y, int z)

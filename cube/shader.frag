@@ -1,9 +1,11 @@
 #version 330 core
 
-uniform vec3 blockColor;
-out vec3 pixelColor;
+in vec3 pixelUv;
+out vec4 pixelColor;
+
+uniform sampler3D tex;
 
 void main()
 {
-	pixelColor = blockColor;
+	pixelColor = texture(tex, pixelUv);
 }
