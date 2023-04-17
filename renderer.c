@@ -4,11 +4,11 @@
 #include "cubeMesh.h"
 #include "renderer.h"
 
-GLTvertexStore configChunkVertexStore()
+struct GltVertexStore configChunkVertexStore()
 {
-	GLTvertexStore ret = gltCreateVertexStore(3);
+	struct GltVertexStore ret = gltCreateVertexStore(3);
 
-	gltUseVertexStoreBuffer(ret, 0);
+	gltVertexStoreBind(ret, 0);
 	glVertexAttribPointer(0, 3, GL_FLOAT, false, sizeof(float) * 5, NULL);
 	glEnableVertexAttribArray(0);
 
@@ -16,12 +16,12 @@ GLTvertexStore configChunkVertexStore()
 		1, 2, GL_FLOAT, false, sizeof(float) * 5, (void*) (sizeof(float) * 3));
 	glEnableVertexAttribArray(1);
 
-	gltUseVertexStoreBuffer(ret, 1);
+	gltVertexStoreBind(ret, 1);
 	glVertexAttribPointer(2, 1, GL_FLOAT, false, 0, NULL);
 	glEnableVertexAttribArray(2);
 	glVertexAttribDivisor(2, 1);
 
-	gltUseVertexStoreBuffer(ret, 2);
+	gltVertexStoreBind(ret, 2);
 	glVertexAttribPointer(3, 4, GL_FLOAT, false, sizeof(mat4s), (void*) 0);
 	glVertexAttribPointer(4, 4, GL_FLOAT, false, sizeof(mat4s), (void*) (1 * sizeof(vec4s)));
 	glVertexAttribPointer(5, 4, GL_FLOAT, false, sizeof(mat4s), (void*) (2 * sizeof(vec4s)));
@@ -39,7 +39,7 @@ GLTvertexStore configChunkVertexStore()
 	return ret;
 }
 
-void drawChunk(Chunk chunk, mat4s vp, GLuint shader, GLuint texture, GLTvertexStore vs)
+void drawChunk(Chunk chunk, mat4s vp, GLuint shader, GLuint texture, struct GltVertexStore vs)
 {
 	int vpUniform = glGetUniformLocation(shader, "vp");
 	glUniformMatrix4fv(vpUniform, 1, false, &vp.m00);

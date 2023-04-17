@@ -16,5 +16,5 @@ enum BlockFaces
 	Z_PLUS
 };
 
-GLTvertexStore configChunkVertexStore();
-void drawChunk(Chunk chunk, mat4s vp, GLuint shader, GLuint texture, GLTvertexStore vs);
+struct GltVertexStore configChunkVertexStore();
+void drawChunk(Chunk chunk, mat4s vp, GLuint shader, GLuint texture, struct GltVertexStore vs);

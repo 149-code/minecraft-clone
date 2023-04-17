@@ -35,8 +35,8 @@ int main()
 	glEnable(GL_DEPTH_TEST);
 	glDepthFunc(GL_LESS);
 
-	GLuint shader = gltCreateShader("cube/shader.vert", "cube/shader.frag");
-	GLTvertexStore chunkVs = configChunkVertexStore();
+	GLuint shader = gltCreateShader("cube/shader.vert", "cube/shader.frag", NULL);
+	struct GltVertexStore chunkVs = configChunkVertexStore();
 	Player player = {{-5, 10, -5}, {glm_rad(-45), glm_rad(-30)}};
 	GLuint texture = generate3DTexture();
 
